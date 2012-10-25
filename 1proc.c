@@ -60,10 +60,10 @@ main(int argc, char **argv)
 	isatty(1) && printf("N=%zu\n", nelem);
 
 	a = malloc(nelem*sizeof(int));
-    if (!a) {
-        perror("malloc");
-        exit(1);
-    }
+	if (!a) {
+		perror("malloc");
+		exit(1);
+	}
 	
 	init_a(nelem);
 
