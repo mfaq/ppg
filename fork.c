@@ -1,6 +1,3 @@
-#define _XOPEN_SOURCE 700
-#define _SVID_SOURCE
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
