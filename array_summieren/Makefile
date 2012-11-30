@@ -20,5 +20,3 @@ openmp:
 .PHONY: clean all
 clean:
 	rm bin/*
-	rm results/*.txt
-
