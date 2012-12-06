@@ -1,6 +1,6 @@
 TARGET=psort
 CC=gcc
-CFLAGS=-Wall -std=c11 -pedantic -ggdb3 -O3
+CFLAGS=-Wall -std=c99 -pedantic -ggdb3 -O3
 LIBS := -lpthread
 EXT := c
 BUILDDIR := build

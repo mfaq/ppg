@@ -43,6 +43,11 @@ void *oddeven(void *tdata)
 	pthread_exit(NULL);
 }
 
+void fatal(const char *s) {
+	perror(s);
+	exit(1);
+}
+
 int main(int argc, char **argv)
 {
 	int n;
@@ -53,8 +58,10 @@ int main(int argc, char **argv)
 		n = atoi(argv[1]);
 
 	int *numbers = malloc(n * sizeof(int));
-	srand(time(NULL));
+	if (numbers == NULL)
+		fatal("malloc");
 
+	srand(time(NULL));
 	for (int i = 0; i < n; i++) {
 		numbers[i] = rand() % 100;
 		printf("%d ", numbers[i]);
@@ -64,9 +71,13 @@ int main(int argc, char **argv)
 	pthread_t threads[n];
 	mqueue_t *mq[n];
 	struct thread_data *td = malloc(n * sizeof(struct thread_data));
+	if (td == NULL)
+		fatal("malloc");
 
 	for (int i = 0; i < n; i++) {
-		mq[i] = mq_create(10);
+		mq[i] = mq_create(1);
+		if (mq[i] == NULL)
+			fatal("mq_create");
 		td[i].n = n;
 		td[i].rank = i;
 		td[i].array = numbers;
@@ -75,20 +86,16 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < n; i++) {
 		int ret = pthread_create(&threads[i], NULL, oddeven, &td[i]);
-		if (ret) {
-			printf("ERROR: pthread_create() returned %d\n", ret);
-			exit(1);
-		}
+		if (ret)
+			fatal("pthread_create");
 	}
 
 	void *status;
 
 	for (int i = 0; i < n; i++) {
 		int ret = pthread_join(threads[i], &status);
-		if (ret) {
-			printf("ERROR: pthread_join() returned %d for thread %d\n", ret, i);
-			exit(1);
-		}
+		if (ret)
+			fatal("pthread_join");
 	}
 
 	for (int i = 0; i < n; i++) {

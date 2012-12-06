@@ -9,28 +9,30 @@
 mqueue_t *mq_create(int cap)
 {
 	mqueue_t *mq = malloc(sizeof(mqueue_t));
+	if (mq == NULL)
+		return NULL;
+
 	memset(mq, 0, sizeof(mqueue_t));
 	mq->cap = cap;
 	
-	if (pthread_cond_init(&mq->cond, NULL) != 0) {
-		perror("pthread_cond_init");
-		exit(2);
-	}
+	if (pthread_cond_init(&mq->cond, NULL) != 0)
+		goto cleanup;
 
-	pthread_mutexattr_t mattr;
-	if (pthread_mutexattr_init(&mattr))
-		perror("pthread_mutexattr_init");
-
-	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_ERRORCHECK);
-
-	if (pthread_mutex_init(&mq->mu, &mattr) != 0) {
-		perror("pthread_mutex_init");
-		exit(4);
-	}
+	if (pthread_mutex_init(&mq->mu, NULL) != 0)
+		goto cleanup;
 
 	mq->data = malloc(cap * sizeof(int));
+	if (mq->data == NULL) {
+		goto cleanup;
+	}
 
 	return mq;
+
+cleanup:
+	// TODO: call cond_destroy/mutex_destroy when appropriate
+	free(mq);
+	return NULL;
+
 }
 
 void mq_destroy(mqueue_t *mq)
@@ -45,7 +47,7 @@ void mq_send(mqueue_t *mq, int msg)
 {
 	int ret;
 	if ((ret = pthread_mutex_lock(&mq->mu)) != 0)
-		printf("send: mutex_lock returned %d\n", ret);
+		fprintf(stderr, "send: mutex_lock returned %d\n", ret);
 	while (mq->qsize == mq->cap) {
 		pthread_cond_wait(&mq->cond, &mq->mu);
 	}
@@ -63,7 +65,7 @@ int mq_recv(mqueue_t *mq)
 {
 	int ret;
 	if ((ret = pthread_mutex_lock(&mq->mu)) != 0)
-		printf("send: mutex_lock returned %d\n", ret);
+		fprintf(stderr, "send: mutex_lock returned %d\n", ret);
 
 	while (mq->qsize == 0) {
 		pthread_cond_wait(&mq->cond, &mq->mu);
